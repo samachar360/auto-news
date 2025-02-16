@@ -3,30 +3,31 @@ from bs4 import BeautifulSoup
 import csv
 from datetime import datetime
 
-def simple_scraper():
-    with open('news.csv', 'w', newline='', encoding='utf-8') as f:
-        writer = csv.writer(f)
-        writer.writerow(['Time', 'Source', 'Title', 'Link'])
+def safe_scraper():
+    try:
+        # Get mobile-friendly AajTak page
+        response = requests.get('https://m.aajtak.in/')
+        soup = BeautifulSoup(response.text, 'html.parser')
         
-        # Simple AajTak mobile scraper
-        try:
-            page = requests.get('https://m.aajtak.in/', timeout=10)
-            soup = BeautifulSoup(page.text, 'lxml')
+        # Create CSV file with headers
+        with open('news.csv', 'w', newline='', encoding='utf-8') as file:
+            writer = csv.writer(file)
+            writer.writerow(['Time', 'Title', 'Link'])
             
-            for news in soup.find_all('div', class_='story__card')[:10]:
-                title = news.find('h2').text.strip()
-                link = news.find('a')['href']
+            # Simple mobile selector
+            for article in soup.select('div.story__card')[:5]:
+                title = article.find('h2').text.strip()
+                link = article.find('a')['href']
                 if not link.startswith('http'):
                     link = f'https://m.aajtak.in{link}'
                 
                 writer.writerow([
-                    datetime.now().strftime("%d-%m %H:%M"),
-                    "AajTak",
+                    datetime.now().strftime("%H:%M"),
                     title,
                     link
                 ])
-        except Exception as e:
-            print(f"Error: {str(e)}")
+                
+    except Exception as e:
+        print(f"Error: {str(e)}")
 
-if __name__ == "__main__":
-    simple_scraper()
+safe_scraper()
