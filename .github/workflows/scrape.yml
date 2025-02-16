@@ -8,7 +8,9 @@ jobs:
   scrape:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
+  with:
+    persist-credentials: true
     - name: Setup Python
       uses: actions/setup-python@v2
       with:
@@ -18,9 +20,10 @@ jobs:
     - name: Run Scraper
       run: python scraper.py
     - name: Save changes
-      run: |
-        git config --global user.name "News Bot"
-        git config --global user.email "bot@news.com"
-        git add news.csv
-        git commit -m "Auto-update: $(date +'%d/%m')"
-        git push
+  run: |
+    git config --global user.name "News Bot"
+    git config --global user.email "bot@news.com"
+    git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
+    git add .
+    git commit -m "Auto update: $(date +'%d/%m')"
+    git push
