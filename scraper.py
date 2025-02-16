@@ -3,18 +3,19 @@ from bs4 import BeautifulSoup
 import csv
 from datetime import datetime
 
-def safe_scraper():
+def live_scraper():
     try:
-        # Get AajTak mobile site
+        # Connect to AajTak mobile news
         url = "https://m.aajtak.in/"
         response = requests.get(url, timeout=20)
         soup = BeautifulSoup(response.text, 'html.parser')
         
+        # Open CSV file to save news
         with open('news.csv', 'w', newline='', encoding='utf-8') as f:
             writer = csv.writer(f)
-            writer.writerow(['Time', 'Title', 'Link'])
+            writer.writerow(['Time', 'Title', 'Link'])  # Header
             
-            # Working mobile selector
+            # Find news articles
             for article in soup.select('div.story__card')[:10]:
                 title = article.find('h2').text.strip()
                 link = article.find('a')['href']
@@ -26,7 +27,8 @@ def safe_scraper():
                     title,
                     link
                 ])
+                
     except Exception as e:
-        print(f"ERROR: {str(e)}")
+        print(f"Error: {str(e)}")
 
-safe_scraper()
+live_scraper()
