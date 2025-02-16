@@ -3,39 +3,51 @@ from bs4 import BeautifulSoup
 import csv
 from datetime import datetime
 
-def safe_scraper():
-    try:
-        # Connect to AajTak with browser headers
-        headers = {
-            'User-Agent': 'Mozilla/5.0 (Linux; Android 10) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.120 Mobile Safari/537.36'
-        }
-        
-        response = requests.get('https://m.aajtak.in/', headers=headers, timeout=20)
-        soup = BeautifulSoup(response.text, 'html.parser')
-        
-        # Working selectors (verified)
-        articles = soup.select('div.story__detail')
-        
-        with open('news.csv', 'w', newline='', encoding='utf-8') as f:
-            writer = csv.writer(f)
-            writer.writerow(['Time', 'Title', 'Link'])
-            
-            for article in articles[:10]:
-                title = article.select_one('h2').text.strip()
-                link = article.find('a')['href']
-                if not link.startswith('http'):
-                    link = f'https://m.aajtak.in{link}'
-                
-                writer.writerow([
-                    datetime.now().strftime("%H:%M"),
-                    title,
-                    link
-                ])
-                
-    except Exception as e:
-        print(f"ERROR: {str(e)}")
-        with open('news.csv', 'w') as f:
-            f.write("Time,Title,Link\n")
-            f.write("00:00,Scraping Failed,https://error.com")
+NEWS_SOURCES = [
+    {
+        'name': 'AajTak',
+        'url': 'https://www.aajtak.in/',
+        'selector': 'div.story__card h2.story__title',
+        'link_selector': 'div.story__card a'
+    },
+    {
+        'name': 'Hindustan Times',
+        'url': 'https://www.hindustantimes.com/',
+        'selector': 'div.media-heading h3',
+        'link_selector': 'div.media-heading a'
+    },
+    {
+        'name': 'News18 India',
+        'url': 'https://hindi.news18.com/',
+        'selector': 'div.lead-mstory h2',
+        'link_selector': 'div.lead-mstory a'
+    }
+]
 
-safe_scraper()
+def multi_source_scraper():
+    with open('news.csv', 'w', newline='', encoding='utf-8') as f:
+        writer = csv.writer(f)
+        writer.writerow(['Time', 'Source', 'Title', 'Link'])  # Added Source column
+        
+        for source in NEWS_SOURCES:
+            try:
+                response = requests.get(source['url'], timeout=20)
+                soup = BeautifulSoup(response.text, 'lxml')
+                
+                titles = [h.text.strip() for h in soup.select(source['selector'])]
+                links = [a['href'] for a in soup.select(source['link_selector'])]
+                
+                for title, link in zip(titles[:10], links[:10]):
+                    full_link = link if link.startswith('http') else source['url'] + link
+                    writer.writerow([
+                        datetime.now().strftime("%H:%M"),
+                        source['name'],
+                        title,
+                        full_link
+                    ])
+                    
+            except Exception as e:
+                print(f"Error scraping {source['name']}: {str(e)}")
+                continue
+
+multi_source_scraper()
