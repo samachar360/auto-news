@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <title>24x7 स्वचालित समाचार</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {font-family: Arial, sans-serif; padding: 20px;}
+        .news-card {
+            background: #f8f9fa;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .source {color: #6c757d; font-size: 0.9em;}
+    </style>
+</head>
+<body>
+    <h1>ताज़ा ख़बरें</h1>
+    <div id="news-container">लोड हो रहा है...</div>
+
+    <script>
+    // Automatically load news data
+    fetch('https://raw.githubusercontent.com/YOUR_USERNAME/auto-news/main/news.csv')
+    .then(response => response.text())
+    .then(data => {
+        let html = '';
+        data.split('\n').forEach(row => {
+            if(row) {
+                const [time, source, title, url] = row.split(',');
+                html += `
+                <div class="news-card">
+                    <h3>${title}</h3>
+                    <div class="source">
+                        ${source} - 
+                        <small>${time}</small>
+                    </div>
+                    <a href="${url}" target="_blank">पूरा पढ़ें</a>
+                </div>
+                `;
+            }
+        });
+        document.getElementById('news-container').innerHTML = html;
+    });
+    </script>
+</body>
+</html>
