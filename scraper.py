@@ -1,32 +1,32 @@
 import requests
 from bs4 import BeautifulSoup
 import csv
-import datetime
+from datetime import datetime
 
-# List of news websites to scrape
-NEWS_SOURCES = [
-    ('AajTak', 'https://www.aajtak.in/', '.story__title'),
-    ('IndiaToday', 'https://www.indiatoday.in/', '.B1S3_title')
-]
-
-def auto_scrape():
-    with open('news.csv', 'a', newline='', encoding='utf-8') as file:
-        writer = csv.writer(file)
-        for source in NEWS_SOURCES:
-            try:
-                response = requests.get(source[1])
-                soup = BeautifulSoup(response.text, 'html.parser')
-                headlines = [h.text.strip() for h in soup.select(source[2])[:5]]
+def simple_scraper():
+    with open('news.csv', 'w', newline='', encoding='utf-8') as f:
+        writer = csv.writer(f)
+        writer.writerow(['Time', 'Source', 'Title', 'Link'])
+        
+        # Simple AajTak mobile scraper
+        try:
+            page = requests.get('https://m.aajtak.in/', timeout=10)
+            soup = BeautifulSoup(page.text, 'lxml')
+            
+            for news in soup.find_all('div', class_='story__card')[:10]:
+                title = news.find('h2').text.strip()
+                link = news.find('a')['href']
+                if not link.startswith('http'):
+                    link = f'https://m.aajtak.in{link}'
                 
-                for headline in headlines:
-                    writer.writerow([
-                        datetime.datetime.now().strftime("%Y-%m-%d %H:%M"),
-                        source[0],  # Website name
-                        headline,
-                        source[1]   # News URL
-                    ])
-            except Exception as e:
-                print(f"Error in {source[0]}: {str(e)}")
+                writer.writerow([
+                    datetime.now().strftime("%d-%m %H:%M"),
+                    "AajTak",
+                    title,
+                    link
+                ])
+        except Exception as e:
+            print(f"Error: {str(e)}")
 
 if __name__ == "__main__":
-    auto_scrape()
+    simple_scraper()
