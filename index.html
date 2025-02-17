@@ -2,10 +2,25 @@
 <html>
 <head>
     <title>Samachar 360</title>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: Arial; padding: 20px; }
+        .news-item { margin: 10px; padding: 10px; border: 1px solid #ddd; }
+    </style>
 </head>
 <body>
     <h1>Latest News</h1>
-    <div id="news"></div>
-    <script src="app.js"></script>
+    <div id="news">Loading...</div>
+    <script>
+    fetch('https://raw.githubusercontent.com/samachar3/auto-news/main/news.csv')
+    .then(r => r.text())
+    .then(data => {
+        let html = '';
+        data.split('\n').forEach(row => {
+            if(row) html += `<div class="news-item">${row}</div>`;
+        });
+        document.getElementById('news').innerHTML = html;
+    });
+    </script>
 </body>
 </html>
